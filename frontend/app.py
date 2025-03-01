@@ -30,6 +30,22 @@ def generate_post():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/regenerate_post', methods=['POST'])
+def regenerate_post():
+    data = request.json
+    user_idea = data.get('idea')
+    
+    if not user_idea:
+        return jsonify({"error": "No idea provided"}), 400
+    
+    try:
+        # Force regeneration by setting regenerate=True
+        post_generation.main(user_idea, regenerate=True)
+        hashtag_algorithm.main()  # Regenerate hashtags as well
+        return jsonify({"message": "Post regenerated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/generate_hashtags', methods=['POST'])
 def generate_hashtags():
     try:

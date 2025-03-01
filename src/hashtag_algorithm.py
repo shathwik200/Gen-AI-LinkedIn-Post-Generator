@@ -16,22 +16,44 @@ def load_post_data(file_path):
         raise ValueError("Invalid format for post.json. Expected a dict with a 'text' key.")
 
 def generate_hashtags(post_text):
-    """Generate hashtags for the given post text using the LLM."""
+    """Generate optimized hashtags using enhanced prompt engineering."""
     prompt = (
-        "Generate 5-8 relevant, professional LinkedIn hashtags for the following post. "
-        "Each hashtag should be a single word or compound word (no spaces). "
-        "Return only the hashtags, separated by spaces:\n\n"
-        f"\"{post_text}\"\n"
+        "As a LinkedIn hashtag optimization expert, analyze this post and:\n\n"
+        "1. Generate 5-7 highly relevant professional hashtags\n"
+        "2. Focus on trending industry-specific tags\n"
+        "3. Include a mix of:\n"
+        "   - High-volume hashtags (100k+ followers)\n"
+        "   - Niche-specific hashtags\n"
+        "   - Trending tech hashtags\n\n"
+        "Rules:\n"
+        "- No spaces in hashtags\n"
+        "- No special characters except hyphens\n"
+        "- Keep hashtags under 20 characters\n"
+        "- No generic terms like 'success' or 'motivation'\n\n"
+        f"Post text:\n{post_text}\n\n"
+        "Return only the hashtags, separated by spaces:"
     )
+
     try:
         response = take(prompt)
-        # Clean hashtags: remove any non-alphanumeric characters except #
-        hashtags = [tag.strip() for tag in response.split() if tag.strip()]
-        hashtags = [f"#{tag.strip('#')}" for tag in hashtags]
-        return [tag for tag in hashtags if len(tag) > 1]  # Ensure no empty tags
+        # Enhanced hashtag cleaning and validation
+        hashtags = [
+            f"#{tag.strip('#').lower()}" 
+            for tag in response.split() 
+            if tag.strip() and len(tag) <= 20
+        ]
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        hashtags = [
+            tag for tag in hashtags 
+            if not (tag.lower() in seen or seen.add(tag.lower()))
+        ]
+        
+        return hashtags[:7]  # Limit to top 7 hashtags
     except Exception as e:
         print(f"Warning: Error generating hashtags: {str(e)}")
-        return ["#NIAT", "#GENAI"]  # Fallback to default hashtags
+        return ["#NIAT", "#GENAI"]
 
 def save_post_data(file_path, data):
     """Save the updated post data to the given file path."""

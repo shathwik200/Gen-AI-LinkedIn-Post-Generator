@@ -1,37 +1,61 @@
 import json
 import os
 from llm import take
+from data_analyzer import load_raw_data, get_post_recommendations
 
 def save_post_data(file_path, post_data):
     """Save post data (only text) to the given file path."""
     with open(file_path, 'w') as file:
         json.dump(post_data, file, indent=4)
 
-def main(user_idea):
+def main(user_idea, regenerate=False):
     if not user_idea or not isinstance(user_idea, str):
         raise ValueError("User idea must be a non-empty string")
 
-    # Determine the project's root directory and relevant file paths
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(script_dir, ".."))
-    post_data_path = os.path.join(project_root, 'data', 'post.json')
-
-    # Updated prompt with stricter rules
-    prompt = (
-        "Generate a professional LinkedIn post based on the idea below. Follow these rules strictly:\n"
-        "1. DO NOT include any hashtags or # symbols\n"
-        "2. DO NOT add any tags or mentions\n"
-        "3. Include relevant emojis for engagement\n"
-        "4. Keep the tone professional but friendly\n"
-        "5. Focus only on the main message\n\n"
-        f"Idea: {user_idea}\n\n"
-        "Generate the post text only:"
+    # Add temperature randomization for regeneration
+    temperature = 0.9 if regenerate else 0.7
+    
+    # Get patterns and recommendations from raw data
+    patterns = load_raw_data()
+    recommendations = get_post_recommendations(patterns)
+    
+    # Enhanced prompt with data-driven insights
+    base_prompt = (
+        "As a LinkedIn content optimization expert, create an engaging post following these data-driven guidelines:\n\n"
+        f"TARGET METRICS:\n"
+        f"- Optimal word count: {recommendations['optimal_length']} words\n"
+        f"- Target readability score: {recommendations['target_readability']:.2f}\n"
+        f"- Recommended tone: {recommendations['recommended_tone']}\n\n"
+        "STRUCTURAL ELEMENTS:\n"
+        "1. Hook: Start with an attention-grabbing first line\n"
+        "2. Value: Clearly state the benefit or insight\n"
+        "3. Story: Share a brief narrative or example\n"
+        "4. CTA: End with an engaging question or call-to-action\n\n"
+        "ENGAGEMENT RULES:\n"
+        "- Use 5-6 relevant emojis strategically\n"
+        "- Include line breaks for readability\n"
+        "- Keep paragraphs short (5-6 lines)\n"
+        "- Create curiosity and discussion\n\n"
+        f"USER IDEA: {user_idea}\n\n"
+        "Generate a LinkedIn post optimized for maximum engagement:"
     )
+    
+    if regenerate:
+        prompt = base_prompt + "\n\nNOTE: Generate a fresh perspective with different wording and structure while maintaining the core message."
+    else:
+        prompt = base_prompt
 
     try:
-        generated_post = take(prompt)
-        if '#' in generated_post:
-            generated_post = generated_post.replace('#', '')
+        # Pass temperature to take() function
+        generated_post = take(prompt, temperature=temperature)
+        generated_post = (generated_post
+            .replace('#', '')
+            .strip()
+            .replace('\n\n\n', '\n\n')
+        )
+        
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        post_data_path = os.path.join(script_dir, '..', 'data', 'post.json')
         
         post_data = {"text": generated_post.replace("\n", "\\n")}
         save_post_data(post_data_path, post_data)

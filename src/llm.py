@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-def take(user_message):
+def take(user_message, temperature=0.7):
     try:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -18,6 +18,7 @@ def take(user_message):
                 {"role": "system", "content": "You are an AI that strictly follows all instructions given by the user."},
                 {"role": "user", "content": user_message}
             ],
+            temperature=temperature,  # Add temperature parameter
             stream=True,
         )
 
