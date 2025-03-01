@@ -1,8 +1,17 @@
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def take(user_message):
     try:
-        client = OpenAI()
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OpenAI API key not found in environment variables")
+
+        client = OpenAI(api_key=api_key)
         stream = client.chat.completions.create(
             model="gpt-4o-mini",  # Fixed model name
             messages=[
@@ -19,10 +28,7 @@ def take(user_message):
                 continue
             delta = chunk.choices[0].delta
             # Safely attempt to retrieve the "content" using dictionary access or attribute access
-            if isinstance(delta, dict):
-                content = delta.get("content", "")
-            else:
-                content = getattr(delta, "content", "")
+            content = delta.get("content", "") if isinstance(delta, dict) else getattr(delta, "content", "")
             if content:
                 response_parts.append(content)
         response = "".join(response_parts)
