@@ -1,17 +1,20 @@
 import json
 import os
-from collections import defaultdict
+from collections import Counter
+from collections import defaultdict  # added import for defaultdict
 
 def load_raw_data():
-    """Load and analyze raw data patterns"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    raw_data_path = os.path.join(script_dir, '..', 'data', 'raw_data.json')
-    
-    with open(raw_data_path, 'r') as file:
+    # Construct the path to the raw_data.json file
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'raw_data.json')
+    with open(file_path, 'r') as file:
         data = json.load(file)
     
-    patterns = analyze_patterns(data)
-    return patterns
+    # Return data with all keys except "hashtags"
+    filtered_data = [
+        {key: value for key, value in entry.items() if key != "hashtags"}
+        for entry in data
+    ]
+    return filtered_data
 
 def analyze_patterns(data):
     """Analyze successful post patterns"""
@@ -46,10 +49,33 @@ def analyze_patterns(data):
     return patterns
 
 def get_post_recommendations(patterns):
-    """Generate recommendations based on patterns"""
+    """
+    Compute recommendations from the list of post dictionaries.
+    
+    Recommends:
+    - optimal_length: average word count across all posts.
+    - target_readability: average readability.
+    - recommended_tone: most common tone.
+    """
+    if not patterns:
+        return {'optimal_length': 100, 'target_readability': 0.8, 'recommended_tone': 'neutral'}
+
+    total_words = 0
+    total_readability = 0
+    tones = []
+
+    for entry in patterns:
+        text = entry.get("text", "")
+        total_words += len(text.split())
+        total_readability += entry.get("readability", 0)
+        tones.append(entry.get("tone", "neutral"))
+    
+    avg_words = round(total_words / len(patterns))
+    avg_readability = total_readability / len(patterns)
+    recommended_tone = Counter(tones).most_common(1)[0][0]
+
     return {
-        'optimal_length': patterns['optimal_length'],
-        'recommended_tone': max(patterns['tone_distribution'].items(), key=lambda x: x[1])[0],
-        'top_hashtags': sorted(patterns['successful_hashtags'].items(), key=lambda x: x[1], reverse=True)[:5],
-        'target_readability': patterns['best_readability']
+        'optimal_length': avg_words,
+        'target_readability': avg_readability,
+        'recommended_tone': recommended_tone
     }

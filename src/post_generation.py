@@ -1,6 +1,6 @@
 import json
 import os
-from llm1 import take
+from llm import take  # changed from llm1 to llm
 from data_analyzer import load_raw_data, get_post_recommendations
 
 def save_post_data(file_path, post_data):
@@ -19,7 +19,13 @@ def main(user_idea, regenerate=False):
     patterns = load_raw_data()
     recommendations = get_post_recommendations(patterns)
     
-    # Enhanced prompt with data-driven insights
+    # Prepare training examples from high-engagement posts (limit to 2 examples)
+    high_engagement_posts = sorted(patterns, key=lambda x: x.get("engagement", 0), reverse=True)[:2]
+    training_examples = ""
+    for i, post in enumerate(high_engagement_posts, start=1):
+        training_examples += f"Example {i}: {post['text']}\n"
+    
+    # Enhanced prompt with data-driven insights and training examples
     base_prompt = (
         "As a LinkedIn content optimization expert, create an engaging post following these data-driven guidelines:\n\n"
         f"TARGET METRICS:\n"
@@ -36,6 +42,7 @@ def main(user_idea, regenerate=False):
         "- Include line breaks for readability\n"
         "- Keep paragraphs short (5-6 lines)\n"
         "- Create curiosity and discussion\n\n"
+        f"TRAINING EXAMPLES:\n{training_examples}\n"
         f"USER IDEA: {user_idea}\n\n"
         "Generate a LinkedIn post optimized for maximum engagement:"
     )

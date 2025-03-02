@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-def take(user_message, temperature=0.7):
+def take(user_message: str, temperature: float = 0.7) -> str:
     try:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -35,6 +35,8 @@ def take(user_message, temperature=0.7):
         response = "".join(response_parts)
         return response.strip()
     except Exception as e:
+        # Optionally log the error details
+        print(f"[Error] LLM processing failed: {str(e)}")  # added logging hint
         raise Exception(f"Error in LLM processing: {str(e)}")
 
 if __name__ == "__main__":

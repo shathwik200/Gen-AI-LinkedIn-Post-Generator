@@ -67,4 +67,6 @@ def get_post():
     return jsonify(post_data), 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    host = os.getenv("FLASK_HOST", "127.0.0.1")
+    port = int(os.getenv("FLASK_PORT", 5000))
+    app.run(debug=True, host=host, port=port)  # enabled dynamic host/port configuration
