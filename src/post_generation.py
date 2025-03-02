@@ -1,6 +1,6 @@
 import json
 import os
-from llm import take
+from llm1 import take
 from data_analyzer import load_raw_data, get_post_recommendations
 
 def save_post_data(file_path, post_data):

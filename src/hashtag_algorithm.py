@@ -1,6 +1,6 @@
 import json
 import os
-from llm import take
+from llm1 import take
 
 def load_post_data(file_path):
     """Load post data from the given file path."""
