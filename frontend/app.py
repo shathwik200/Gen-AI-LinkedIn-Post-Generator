@@ -67,6 +67,6 @@ def get_post():
     return jsonify(post_data), 200
 
 if __name__ == "__main__":
-    host = os.getenv("FLASK_HOST", "127.0.0.1")
-    port = int(os.getenv("FLASK_PORT", 5000))
-    app.run(debug=True, host=host, port=port)  # enabled dynamic host/port configuration
+    host = os.getenv("FLASK_HOST", "0.0.0.0")  # Changed host for Render
+    port = int(os.getenv("PORT", 5000))          # Use PORT environment variable for Render
+    app.run(debug=True, host=host, port=port)
